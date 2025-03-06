@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        env:
+        - name: SECRET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: myapp-secret
+              key: username
+        - name: SECRET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: myapp-secret
+              key: password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: myapp-secret
+type: Opaque
+data:
+  username: YWRtaW4=  # base64 encoded 'admin'
+  password: bXlwYXNzd29yZA==  # base64 encoded 'mypassword'
