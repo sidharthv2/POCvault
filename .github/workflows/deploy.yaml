@@ -3,8 +3,7 @@ name: Deploy to K3s
 on:
   push:
     branches:
-      - main  # Runs when changes are pushed to the 'main' branch
-  workflow_dispatch:  # Allows manual triggering of the workflow
+      - main
 
 jobs:
   deploy:
@@ -16,18 +15,18 @@ jobs:
       - name: Configure Kubeconfig
         run: |
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > kubeconfig.yaml
-          export KUBECONFIG=kubeconfig.yaml
+          export KUBECONFIG=$PWD/kubeconfig.yaml
 
       - name: Install Vault CLI
         run: |
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
           sudo apt-get update && sudo apt-get install vault -y
 
       - name: Authenticate with Vault & Retrieve Secrets
         run: |
           export VAULT_ADDR='${{ secrets.VAULT_ADDR }}'
-          vault login -no-print ${{ secrets.VAULT_TOKEN }}
+          vault login ${{ secrets.VAULT_TOKEN }}
           username=$(vault kv get -field=username secret/myapp)
           password=$(vault kv get -field=password secret/myapp)
           echo "USERNAME=$username" >> $GITHUB_ENV
